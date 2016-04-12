@@ -25,12 +25,15 @@ const int SCREEN_HEIGHT = 480;
 const int FOCAL_LENGTH = SCREEN_HEIGHT / 2;
 SDL_Surface* screen;
 vector<vec3> stars(1000);
+int t;
+const double VELOCITY = 0.0005;
 
 // --------------------------------------------------------
 // FUNCTION DECLARATIONS
 
 void Draw();
 void DrawSpace();
+void Update();
 
 // --------------------------------------------------------
 // FUNCTION DEFINITIONS
@@ -39,7 +42,9 @@ int main( int argc, char* argv[] )
 {
 	screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
 
-	for (int i = 0; i < stars.size(); ++i) {
+	int starsCount = stars.size();
+
+	for (int i = 0; i < starsCount; ++i) {
 		vec3 currentStar = stars[i];
 
 		for (int k = 0; k < 2; ++k) {
@@ -57,9 +62,16 @@ int main( int argc, char* argv[] )
 		stars[i] = currentStar;
 	}
 
+	t = SDL_GetTicks();
 	while( NoQuitMessageSDL() )
 	{
+		// part 1 of lab
+		//Draw();
+
+		//part 2 of lab
+		Update();
 		DrawSpace();
+
 	}
 	SDL_SaveBMP( screen, "screenshot.bmp" );
 	return 0;
@@ -121,17 +133,36 @@ void Draw()
 
 void DrawSpace()
 {
-
-
-
 	SDL_FillRect(screen, 0, 0);
 	if (SDL_MUSTLOCK(screen))
 		SDL_LockSurface(screen);
+
 	for (size_t s = 0; s<stars.size(); ++s)
 	{
-		// project and draw each star
+		int u = FOCAL_LENGTH * (stars[s][0] / stars[s][2]) + (SCREEN_WIDTH / 2);
+		int v = FOCAL_LENGTH * (stars[s][1] / stars[s][2]) + (SCREEN_HEIGHT / 2);
+		vec3 color = 0.2f * vec3(1, 1, 1) / (stars[s][2]*stars[s][2]);
+		PutPixelSDL(screen, u, v, color);
 	}
+
 	if (SDL_MUSTLOCK(screen))
 		SDL_UnlockSurface(screen);
+
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
-}
+}
+
+void Update()
+{
+	int t2 = SDL_GetTicks();
+	float dt = float(t2 - t);
+	t = t2;
+
+	for (size_t i = 0; i<stars.size(); ++i)
+	{
+		if (stars[i][2] < 0 || stars[i][2] > 1) {
+			float z = float(rand()) / float(RAND_MAX);
+			stars[i][2] = z;
+		}
+		stars[i][2] = stars[i][2] - (VELOCITY * dt);
+	}
+}
